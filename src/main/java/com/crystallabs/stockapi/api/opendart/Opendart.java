@@ -9,7 +9,11 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
@@ -49,6 +53,40 @@ public class Opendart {
         // JSON -> Map 파싱
         Map<?, ?> body = objectMapper.readValue(bytes, Map.class);
 
+        return commonExtractor(response, body);
+    }
+
+    /**
+     * 반환 타입이 xml 형태인 API 호출 메서드
+     * @param api Open Dart API 명 {@link OpendartField.Api}
+     * @param paramsMap API 호출 시 사용되는 매개변수 {@link OpendartField.Param}
+     * @return {@link OpendartResponse} (body type : {@link Document})
+     * @see <a href="https://opendart.fss.or.kr/guide/main.do?apiGrpCd=DS001">Open Dart 개발 가이드</a>
+     */
+    public OpendartResponse callApiXml(String api, MultiValueMap<String, String> paramsMap) throws IOException{
+        UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(opendartProperties.getUrl())
+                .pathSegment(api)
+                .queryParams(paramsMap)
+                .build();
+
+        return new RestTemplate()
+                .execute(uriComponents.toUri(), HttpMethod.GET, null, this::xmlExtractor);
+    }
+
+    private OpendartResponse xmlExtractor(ClientHttpResponse response) throws IOException {
+        Document body = null;
+
+        // XML 파싱
+        try {
+             body = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(response.getBody());
+        } catch (SAXException | ParserConfigurationException e) {
+            e.printStackTrace();
+        }
+
+        return commonExtractor(response, body);
+    }
+
+    private OpendartResponse commonExtractor(ClientHttpResponse response, Object body) throws IOException {
         return OpendartResponse.builder()
                 .headers(response.getHeaders())
                 .body(body)
