@@ -7,7 +7,6 @@ import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -16,33 +15,36 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.Map;
 
 @Component
 public class Opendart {
 
-    private final OpendartProperties opendartProperties;
+    private static OpendartProperties opendartProperties;
+    private Opendart() {}
 
-    public Opendart(OpendartProperties opendartProperties) {
-        this.opendartProperties = opendartProperties;
+    private static class OpendartHolder {
+        private static final Opendart OPENDART = new Opendart();
+    }
+
+    public static Opendart getInstance(OpendartProperties opendartProperties) {
+        Opendart.opendartProperties = opendartProperties;
+        return OpendartHolder.OPENDART;
     }
 
     /**
      * 반환 타입이 json 형태인 API 호출 메서드
-     * @param api Open Dart API 명 {@link OpendartField.Api}
-     * @param paramsMap API 호출 시 사용되는 매개변수 {@link OpendartField.Param}
+     * @param api Open Dart API 명 {@link OpendartEnum.ApiType}
+     * @param paramsMap API 호출 시 사용되는 매개변수 {@link OpendartEnum.ParamType}
      * @return {@link OpendartResponse} (body type : {@link Map})
      * @see <a href="https://opendart.fss.or.kr/guide/main.do?apiGrpCd=DS001">Open Dart 개발 가이드</a>
      */
-    public OpendartResponse callApiJson(String api, MultiValueMap<String, String> paramsMap) {
-
-        UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(opendartProperties.getUrl())
-                .pathSegment(api)
-                .queryParams(paramsMap)
-                .build();
+    public OpendartResponse callApiJson(OpendartEnum.ApiType api, MultiValueMap<String, String> paramsMap) {
+        URI apiUrl = opendartUrlBuilder(api, paramsMap);
 
         return new RestTemplate()
-                .execute(uriComponents.toUri(), HttpMethod.GET, null, this::jsonExtractor);
+                .execute(apiUrl, HttpMethod.GET, null, this::jsonExtractor);
     }
 
     private OpendartResponse jsonExtractor(ClientHttpResponse response) throws IOException {
@@ -58,19 +60,16 @@ public class Opendart {
 
     /**
      * 반환 타입이 xml 형태인 API 호출 메서드
-     * @param api Open Dart API 명 {@link OpendartField.Api}
-     * @param paramsMap API 호출 시 사용되는 매개변수 {@link OpendartField.Param}
+     * @param api Open Dart API 명 {@link OpendartEnum.ApiType}
+     * @param paramsMap API 호출 시 사용되는 매개변수 {@link OpendartEnum.ParamType}
      * @return {@link OpendartResponse} (body type : {@link Document})
      * @see <a href="https://opendart.fss.or.kr/guide/main.do?apiGrpCd=DS001">Open Dart 개발 가이드</a>
      */
-    public OpendartResponse callApiXml(String api, MultiValueMap<String, String> paramsMap) throws IOException{
-        UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(opendartProperties.getUrl())
-                .pathSegment(api)
-                .queryParams(paramsMap)
-                .build();
+    public OpendartResponse callApiXml(OpendartEnum.ApiType api, MultiValueMap<String, String> paramsMap) throws IOException{
+        URI apiUrl = opendartUrlBuilder(api, paramsMap);
 
         return new RestTemplate()
-                .execute(uriComponents.toUri(), HttpMethod.GET, null, this::xmlExtractor);
+                .execute(apiUrl, HttpMethod.GET, null, this::xmlExtractor);
     }
 
     private OpendartResponse xmlExtractor(ClientHttpResponse response) throws IOException {
@@ -84,6 +83,14 @@ public class Opendart {
         }
 
         return commonExtractor(response, body);
+    }
+
+    private URI opendartUrlBuilder(OpendartEnum.ApiType api, MultiValueMap<String, String> paramsMap) {
+        return UriComponentsBuilder.fromHttpUrl(opendartProperties.getUrl())
+                .pathSegment(api.getApi())
+                .queryParams(paramsMap)
+                .build()
+                .toUri();
     }
 
     private OpendartResponse commonExtractor(ClientHttpResponse response, Object body) throws IOException {

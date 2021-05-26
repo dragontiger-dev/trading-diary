@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Open Dart Api Test")
 class OpendartTest {
 
-
     @Autowired
     OpendartProperties opendartProperties;
 
@@ -29,15 +28,16 @@ class OpendartTest {
     public void opendartApiJsonTest() {
 
         // Given
-        String api = OpendartField.Api.COMPANY_JSON;
+        OpendartEnum.ApiType api = OpendartEnum.ApiType.COMPANY_JSON;
         String corpCode = "00126380";    // 삼성전자
+
         MultiValueMap<String, String> paramsMap = new LinkedMultiValueMap<>();
 
-        paramsMap.add(OpendartField.Param.KEY, opendartProperties.getKey());
-        paramsMap.add(OpendartField.Param.CORP_CODE, corpCode);
+        paramsMap.add(OpendartEnum.ParamType.KEY.getParam(), opendartProperties.getKey());
+        paramsMap.add(OpendartEnum.ParamType.CORP_CODE.getParam(), corpCode);
 
         // When
-        OpendartResponse opendartResponse = new Opendart(opendartProperties).callApiJson(api, paramsMap);
+        OpendartResponse opendartResponse = Opendart.getInstance(opendartProperties).callApiJson(api, paramsMap);
         Map<?, ?> body = (Map<?, ?>) opendartResponse.getBody();
 
         // Then
@@ -59,15 +59,15 @@ class OpendartTest {
     public void opendartApiJsonTestKeyTypo() {
 
         // Given
-        String api = OpendartField.Api.COMPANY_JSON;
+        OpendartEnum.ApiType api = OpendartEnum.ApiType.COMPANY_JSON;
         String corpCode = "00126380";    // 삼성전자
         MultiValueMap<String, String> paramsMap = new LinkedMultiValueMap<>();
 
-        paramsMap.add(OpendartField.Param.KEY, "0000");
-        paramsMap.add(OpendartField.Param.CORP_CODE, corpCode);
+        paramsMap.add(OpendartEnum.ParamType.KEY.getParam(), "0000");
+        paramsMap.add(OpendartEnum.ParamType.CORP_CODE.getParam(), corpCode);
 
         // When
-        OpendartResponse opendartResponse = new Opendart(opendartProperties).callApiJson(api, paramsMap);
+        OpendartResponse opendartResponse = Opendart.getInstance(opendartProperties).callApiJson(api, paramsMap);
         Map<?, ?> body = (Map<?, ?>) opendartResponse.getBody();
 
         // Then
@@ -87,15 +87,15 @@ class OpendartTest {
     public void opendartApiJsonTestNoKey() {
 
         // Given
-        String api = OpendartField.Api.COMPANY_JSON;
+        OpendartEnum.ApiType api = OpendartEnum.ApiType.COMPANY_JSON;
         String corpCode = "00126380";    // 삼성전자
         MultiValueMap<String, String> paramsMap = new LinkedMultiValueMap<>();
 
-        paramsMap.add(OpendartField.Param.CORP_CODE, corpCode);
-        paramsMap.add(OpendartField.Param.KEY, "");
+        paramsMap.add(OpendartEnum.ParamType.CORP_CODE.getParam(), corpCode);
+        paramsMap.add(OpendartEnum.ParamType.KEY.getParam(), "");
 
         // When
-        OpendartResponse opendartResponse = new Opendart(opendartProperties).callApiJson(api, paramsMap);
+        OpendartResponse opendartResponse = Opendart.getInstance(opendartProperties).callApiJson(api, paramsMap);
         Map<?, ?> body = (Map<?, ?>) opendartResponse.getBody();
 
         // Then
@@ -115,13 +115,13 @@ class OpendartTest {
     public void opendartApiJsonTestNoParameter() {
 
         // Given
-        String api = OpendartField.Api.COMPANY_JSON;
+        OpendartEnum.ApiType api = OpendartEnum.ApiType.COMPANY_JSON;
         MultiValueMap<String, String> paramsMap = new LinkedMultiValueMap<>();
 
-        paramsMap.add(OpendartField.Param.KEY, opendartProperties.getKey());
+        paramsMap.add(OpendartEnum.ParamType.KEY.getParam(), opendartProperties.getKey());
 
         // When
-        OpendartResponse opendartResponse = new Opendart(opendartProperties).callApiJson(api, paramsMap);
+        OpendartResponse opendartResponse = Opendart.getInstance(opendartProperties).callApiJson(api, paramsMap);
         Map<?, ?> body = (Map<?, ?>) opendartResponse.getBody();
 
         // Then
@@ -141,15 +141,15 @@ class OpendartTest {
     public void opendartApiXmlTest() throws IOException {
 
         // Given
-        String api = OpendartField.Api.COMPANY_XML;
+        OpendartEnum.ApiType api = OpendartEnum.ApiType.COMPANY_XML;
         String corpCode = "00126380";    // 삼성전자
         MultiValueMap<String, String> paramsMap = new LinkedMultiValueMap<>();
 
-        paramsMap.add(OpendartField.Param.KEY, opendartProperties.getKey());
-        paramsMap.add(OpendartField.Param.CORP_CODE, corpCode);
+        paramsMap.add(OpendartEnum.ParamType.KEY.getParam(), opendartProperties.getKey());
+        paramsMap.add(OpendartEnum.ParamType.CORP_CODE.getParam(), corpCode);
 
         // When
-        OpendartResponse opendartResponse = new Opendart(opendartProperties).callApiXml(api, paramsMap);
+        OpendartResponse opendartResponse = Opendart.getInstance(opendartProperties).callApiXml(api, paramsMap);
         Document document = (Document) opendartResponse.getBody();
 
         // Then
