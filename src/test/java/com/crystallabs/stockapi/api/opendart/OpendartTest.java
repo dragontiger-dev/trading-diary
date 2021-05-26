@@ -1,6 +1,5 @@
 package com.crystallabs.stockapi.api.opendart;
 
-import com.crystallabs.stockapi.config.OpendartProperties;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class OpendartTest {
 
     @Autowired
-    OpendartProperties opendartProperties;
+    private Opendart opendart;
 
     @Test
     @DisplayName("Json 공통 - 정상")
@@ -33,11 +32,10 @@ class OpendartTest {
 
         MultiValueMap<String, String> paramsMap = new LinkedMultiValueMap<>();
 
-        paramsMap.add(OpendartEnum.ParamType.KEY.getParam(), opendartProperties.getKey());
         paramsMap.add(OpendartEnum.ParamType.CORP_CODE.getParam(), corpCode);
 
         // When
-        OpendartResponse opendartResponse = Opendart.getInstance(opendartProperties).callApiJson(api, paramsMap);
+        OpendartResponse opendartResponse = opendart.callApiJson(api, paramsMap);
         Map<?, ?> body = (Map<?, ?>) opendartResponse.getBody();
 
         // Then
@@ -55,62 +53,6 @@ class OpendartTest {
     }
 
     @Test
-    @DisplayName("Json 공통 - key 오타")
-    public void opendartApiJsonTestKeyTypo() {
-
-        // Given
-        OpendartEnum.ApiType api = OpendartEnum.ApiType.COMPANY_JSON;
-        String corpCode = "00126380";    // 삼성전자
-        MultiValueMap<String, String> paramsMap = new LinkedMultiValueMap<>();
-
-        paramsMap.add(OpendartEnum.ParamType.KEY.getParam(), "0000");
-        paramsMap.add(OpendartEnum.ParamType.CORP_CODE.getParam(), corpCode);
-
-        // When
-        OpendartResponse opendartResponse = Opendart.getInstance(opendartProperties).callApiJson(api, paramsMap);
-        Map<?, ?> body = (Map<?, ?>) opendartResponse.getBody();
-
-        // Then
-        assertAll(
-            () -> assertNotNull(opendartResponse),
-            () -> assertEquals(LinkedHashMap.class, opendartResponse.getBody().getClass()),
-            () -> assertTrue(body.containsKey("status")),
-            () -> assertEquals("010", body.get("status")),
-            () -> assertTrue(body.containsKey("message")),
-            () -> assertEquals("등록되지 않은 인증키입니다.", body.get("message")),
-            () -> assertTrue(opendartResponse.getStatus().is2xxSuccessful())
-        );
-    }
-
-    @Test
-    @DisplayName("Json 공통 - key 값 누락")
-    public void opendartApiJsonTestNoKey() {
-
-        // Given
-        OpendartEnum.ApiType api = OpendartEnum.ApiType.COMPANY_JSON;
-        String corpCode = "00126380";    // 삼성전자
-        MultiValueMap<String, String> paramsMap = new LinkedMultiValueMap<>();
-
-        paramsMap.add(OpendartEnum.ParamType.CORP_CODE.getParam(), corpCode);
-        paramsMap.add(OpendartEnum.ParamType.KEY.getParam(), "");
-
-        // When
-        OpendartResponse opendartResponse = Opendart.getInstance(opendartProperties).callApiJson(api, paramsMap);
-        Map<?, ?> body = (Map<?, ?>) opendartResponse.getBody();
-
-        // Then
-        assertAll(
-            () -> assertNotNull(opendartResponse),
-            () -> assertEquals(LinkedHashMap.class, opendartResponse.getBody().getClass()),
-            () -> assertTrue(body.containsKey("status")),
-            () -> assertEquals("100", body.get("status")),
-            () -> assertTrue(body.containsKey("message")),
-            () -> assertEquals("인증키가 누락되었습니다.", body.get("message")),
-            () -> assertTrue(opendartResponse.getStatus().is2xxSuccessful())
-        );
-    }
-
-    @Test
     @DisplayName("Json 공통 - 파라미터 누락")
     public void opendartApiJsonTestNoParameter() {
 
@@ -118,10 +60,8 @@ class OpendartTest {
         OpendartEnum.ApiType api = OpendartEnum.ApiType.COMPANY_JSON;
         MultiValueMap<String, String> paramsMap = new LinkedMultiValueMap<>();
 
-        paramsMap.add(OpendartEnum.ParamType.KEY.getParam(), opendartProperties.getKey());
-
         // When
-        OpendartResponse opendartResponse = Opendart.getInstance(opendartProperties).callApiJson(api, paramsMap);
+        OpendartResponse opendartResponse = opendart.callApiJson(api, paramsMap);
         Map<?, ?> body = (Map<?, ?>) opendartResponse.getBody();
 
         // Then
@@ -145,11 +85,10 @@ class OpendartTest {
         String corpCode = "00126380";    // 삼성전자
         MultiValueMap<String, String> paramsMap = new LinkedMultiValueMap<>();
 
-        paramsMap.add(OpendartEnum.ParamType.KEY.getParam(), opendartProperties.getKey());
         paramsMap.add(OpendartEnum.ParamType.CORP_CODE.getParam(), corpCode);
 
         // When
-        OpendartResponse opendartResponse = Opendart.getInstance(opendartProperties).callApiXml(api, paramsMap);
+        OpendartResponse opendartResponse = opendart.callApiXml(api, paramsMap);
         Document document = (Document) opendartResponse.getBody();
 
         // Then
@@ -167,6 +106,26 @@ class OpendartTest {
                     () -> assertEquals("삼성전자", childNodes.item(5).getTextContent())
                 );
             },
+            () -> assertTrue(opendartResponse.getStatus().is2xxSuccessful())
+        );
+    }
+
+    @Test
+    @DisplayName("Zip Binary 공통 - 정상")
+    public void opendartApiZipBinaryTest() {
+
+        // Given
+        OpendartEnum.ApiType api = OpendartEnum.ApiType.CORP_CODE;
+        MultiValueMap<String, String> paramsMap = new LinkedMultiValueMap<>();
+
+        // When
+        OpendartResponse opendartResponse = opendart.callApiZipBinary(api, paramsMap);
+        Map<?, ?> bodyMap = (Map<?, ?>) opendartResponse.getBody();
+
+        // Then
+        assertAll(
+            () -> assertNotNull(opendartResponse),
+            () -> assertTrue(bodyMap.containsKey("CORPCODE.xml")),
             () -> assertTrue(opendartResponse.getStatus().is2xxSuccessful())
         );
     }

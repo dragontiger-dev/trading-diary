@@ -19,9 +19,11 @@ class OpendartPropertiesTest {
 
         // Given & When
         String key = opendartProperties.getKey();
+        String url = opendartProperties.getUrl();
 
         // Then
         assertNotNull(key);
         assertEquals(System.getenv("OPENDART_KEY"), key);
+        assertEquals("https://opendart.fss.or.kr/api", url);
     }
 }

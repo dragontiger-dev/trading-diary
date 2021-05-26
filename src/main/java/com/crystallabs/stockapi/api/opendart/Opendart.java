@@ -16,21 +16,22 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
+/**
+ * Open Dart Api
+ * @see <a href="https://opendart.fss.or.kr/guide/main.do?apiGrpCd=DS001">개발 가이드</a>
+ */
 @Component
 public class Opendart {
 
-    private static OpendartProperties opendartProperties;
-    private Opendart() {}
+    private final OpendartProperties opendartProperties;
 
-    private static class OpendartHolder {
-        private static final Opendart OPENDART = new Opendart();
-    }
-
-    public static Opendart getInstance(OpendartProperties opendartProperties) {
-        Opendart.opendartProperties = opendartProperties;
-        return OpendartHolder.OPENDART;
+    public Opendart(OpendartProperties opendartProperties) {
+        this.opendartProperties = opendartProperties;
     }
 
     /**
@@ -38,7 +39,6 @@ public class Opendart {
      * @param api Open Dart API 명 {@link OpendartEnum.ApiType}
      * @param paramsMap API 호출 시 사용되는 매개변수 {@link OpendartEnum.ParamType}
      * @return {@link OpendartResponse} (body type : {@link Map})
-     * @see <a href="https://opendart.fss.or.kr/guide/main.do?apiGrpCd=DS001">Open Dart 개발 가이드</a>
      */
     public OpendartResponse callApiJson(OpendartEnum.ApiType api, MultiValueMap<String, String> paramsMap) {
         URI apiUrl = opendartUrlBuilder(api, paramsMap);
@@ -63,7 +63,6 @@ public class Opendart {
      * @param api Open Dart API 명 {@link OpendartEnum.ApiType}
      * @param paramsMap API 호출 시 사용되는 매개변수 {@link OpendartEnum.ParamType}
      * @return {@link OpendartResponse} (body type : {@link Document})
-     * @see <a href="https://opendart.fss.or.kr/guide/main.do?apiGrpCd=DS001">Open Dart 개발 가이드</a>
      */
     public OpendartResponse callApiXml(OpendartEnum.ApiType api, MultiValueMap<String, String> paramsMap) throws IOException{
         URI apiUrl = opendartUrlBuilder(api, paramsMap);
@@ -85,7 +84,39 @@ public class Opendart {
         return commonExtractor(response, body);
     }
 
+    /**
+     * 반환 타입이 Binary (Zip) 형태인 API 호출 메서드
+     * @param api Open Dart API 명 {@link OpendartEnum.ApiType}
+     * @param paramsMap API 호출 시 사용되는 매개변수 {@link OpendartEnum.ParamType}
+     * @return {@link OpendartResponse}
+     * (body type : {@link Map} <br>
+     *  / Key(String) : 파일 명, Value(Byte[]) 압축해제된 파일 Byte 데이터)
+     */
+    public OpendartResponse callApiZipBinary(OpendartEnum.ApiType api, MultiValueMap<String, String> paramsMap) {
+        URI apiUrl = opendartUrlBuilder(api, paramsMap);
+
+        return new RestTemplate()
+                .execute(apiUrl, HttpMethod.GET, null, this::zipBinaryExtractor);
+    }
+
+    private OpendartResponse zipBinaryExtractor(ClientHttpResponse response) throws IOException {
+        ZipInputStream zipInputStream = new ZipInputStream(response.getBody());
+        ZipEntry zipEntry = null;
+        Map<String, byte[]> zipData = new HashMap<>();
+
+        // 압축된 파일이 있을 경우 내용을 Byte 배열에 담음.
+        while ((zipEntry = zipInputStream.getNextEntry()) != null) {
+            zipData.put(zipEntry.getName(), zipInputStream.readAllBytes());
+        }
+
+        return commonExtractor(response, zipData);
+    }
+
     private URI opendartUrlBuilder(OpendartEnum.ApiType api, MultiValueMap<String, String> paramsMap) {
+        
+        // Api Key 추가
+        paramsMap.add(OpendartEnum.ParamType.KEY.getParam(), opendartProperties.getKey());
+        
         return UriComponentsBuilder.fromHttpUrl(opendartProperties.getUrl())
                 .pathSegment(api.getApi())
                 .queryParams(paramsMap)
