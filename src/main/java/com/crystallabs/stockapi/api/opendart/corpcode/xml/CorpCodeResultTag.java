@@ -18,9 +18,8 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement(name = "result")
 @Getter @Setter @ToString
-public class CorporationCodeResultTag
-{
-    private CorporationCodeListTag[] list;
+public class CorpCodeResultTag {
+    private CorpCodeListTag[] list;
 }
 
 

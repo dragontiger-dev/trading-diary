@@ -4,9 +4,10 @@ import lombok.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 
-@Getter @Setter
-@AllArgsConstructor
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter @Setter
 public class OpendartResponse {
 
     @NonNull

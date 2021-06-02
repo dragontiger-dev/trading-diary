@@ -1,6 +1,5 @@
 package com.crystallabs.stockapi.api.opendart.corpcode.xml;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -17,10 +16,10 @@ import javax.xml.bind.annotation.XmlElement;
  * {@code - <modify_date>20170630</modify_date>} <br>
  * {@code </list>} <br>
  *
- * @see CorporationCodeResultTag
+ * @see CorpCodeResultTag
  */
 @Getter @ToString
-public class CorporationCodeListTag
+public class CorpCodeListTag
 {
     @XmlElement(name = "corp_code")
     private String corpCode;

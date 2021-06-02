@@ -1,24 +1,23 @@
 package com.crystallabs.stockapi.api.opendart;
 
-import com.crystallabs.stockapi.api.opendart.corpcode.xml.CorporationCodeListTag;
-import com.crystallabs.stockapi.api.opendart.corpcode.xml.CorporationCodeResultTag;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
+import org.xml.sax.SAXParseException;
 
-import javax.xml.bind.JAXBException;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class OpendartUtilTest {
 
     private OpendartUtil opendartUtil = OpendartUtil.getInstance();
 
     @Test
-    @DisplayName("xml 바이트 데이터를 xml 문서로 변환")
-    public void byteArrayToDocumentTest() throws IOException {
+    @DisplayName("byte 배열을 xml 문서로 변환")
+    public void byteArrayToDocumentTest() throws Exception {
 
         // Given
         File file = new File("test-data/CORPCODE.xml");
@@ -34,20 +33,17 @@ class OpendartUtilTest {
     }
 
     @Test
-    @DisplayName("CORPCODE.xml 문서 -> 리스트")
-    public void documentToList() throws IOException, JAXBException {
+    @DisplayName("byte 배열을 xml 문서로 변환 실패")
+    public void byteArrayToDocumentFailTest() throws Exception {
 
         // Given
-        File file = new File("test-data/CORPCODE.xml");
+        File file = new File("test-data/fail-test.xml");
         FileInputStream fileInputStream = new FileInputStream(file);
         byte[] bytes = fileInputStream.readAllBytes();
-        InputStream inputStream = new ByteArrayInputStream(bytes);
 
-        // When
-        CorporationCodeResultTag corporationCodeResultTag = opendartUtil.xmlToObject(CorporationCodeResultTag.class, inputStream);
-        CorporationCodeListTag[] corporationCodeListTags = corporationCodeResultTag.getList();
-
-        // Then
-        assertEquals("다코", corporationCodeListTags[0].getCorpName());
+        // When & Then
+        assertThrows(SAXParseException.class, () -> {
+            opendartUtil.byteArrayToXmlDocs(bytes);
+        });
     }
 }

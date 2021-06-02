@@ -29,18 +29,11 @@ public class OpendartUtil {
      * @param bytes 압축 해제 후 byte[]로 변환한 데이터
      * @return {@link Document} xml 문서
      */
-    public Document byteArrayToXmlDocs(byte[] bytes) {
+    public Document byteArrayToXmlDocs(byte[] bytes) throws Exception {
         InputStream inputStream = new ByteArrayInputStream(bytes);
-        Document xmlDocs = null;
+        Document xmlDocs = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(inputStream);
 
-        try {
-            xmlDocs = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(inputStream);
-            return xmlDocs;
-        } catch (SAXException | IOException | ParserConfigurationException e) {
-            e.printStackTrace();
-        }
-
-        return null;
+        return xmlDocs;
     }
 
     /**
@@ -48,12 +41,11 @@ public class OpendartUtil {
      * @param boundClass 바인딩 할 클래스
      * @param inputStream Xml 문서 Stream
      * @return 바인딩된 객체
-     * @throws JAXBException
      */
-    public <T> T xmlToObject(Class<?> boundClass, InputStream inputStream) throws JAXBException {
+    public Object xmlToObject(Class<?> boundClass, InputStream inputStream) throws JAXBException {
         JAXBContext context = JAXBContext.newInstance(boundClass);
         Unmarshaller unmarshaller = context.createUnmarshaller();
 
-        return (T) unmarshaller.unmarshal(inputStream);
+        return unmarshaller.unmarshal(inputStream);
     }
 }

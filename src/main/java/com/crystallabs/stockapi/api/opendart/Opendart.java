@@ -64,7 +64,7 @@ public class Opendart {
      * @param paramsMap API 호출 시 사용되는 매개변수 {@link OpendartEnum.ParamType}
      * @return {@link OpendartResponse} (body type : {@link Document})
      */
-    public OpendartResponse callApiXml(OpendartEnum.ApiType api, MultiValueMap<String, String> paramsMap) throws IOException{
+    public OpendartResponse callApiXml(OpendartEnum.ApiType api, MultiValueMap<String, String> paramsMap) {
         URI apiUrl = opendartUrlBuilder(api, paramsMap);
 
         return new RestTemplate()
@@ -72,16 +72,16 @@ public class Opendart {
     }
 
     private OpendartResponse xmlExtractor(ClientHttpResponse response) throws IOException {
-        Document body = null;
+        Document body;
 
         // XML 파싱
         try {
-             body = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(response.getBody());
+            body = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(response.getBody());
+            return commonExtractor(response, body);
         } catch (SAXException | ParserConfigurationException e) {
             e.printStackTrace();
+            return null;
         }
-
-        return commonExtractor(response, body);
     }
 
     /**
@@ -101,7 +101,7 @@ public class Opendart {
 
     private OpendartResponse zipBinaryExtractor(ClientHttpResponse response) throws IOException {
         ZipInputStream zipInputStream = new ZipInputStream(response.getBody());
-        ZipEntry zipEntry = null;
+        ZipEntry zipEntry;
         Map<String, byte[]> zipData = new HashMap<>();
 
         // 압축된 파일이 있을 경우 내용을 Byte 배열에 담음.
@@ -112,6 +112,7 @@ public class Opendart {
         return commonExtractor(response, zipData);
     }
 
+    // API Key 쿼리스트링을 포함한 url 생성
     private URI opendartUrlBuilder(OpendartEnum.ApiType api, MultiValueMap<String, String> paramsMap) {
         
         // Api Key 추가
@@ -124,6 +125,7 @@ public class Opendart {
                 .toUri();
     }
 
+    // API 응답 공통
     private OpendartResponse commonExtractor(ClientHttpResponse response, Object body) throws IOException {
         return OpendartResponse.builder()
                 .headers(response.getHeaders())
